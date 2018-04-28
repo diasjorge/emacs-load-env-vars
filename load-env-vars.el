@@ -1,4 +1,4 @@
-;;; load-env-file.el --- Load environment variables from files                     -*- lexical-binding: t; -*-
+;;; load-env-vars.el --- Load environment variables from files                     -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Jorge Dias
 
