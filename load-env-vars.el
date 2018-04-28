@@ -3,8 +3,10 @@
 ;; Copyright (C) 2018  Jorge Dias
 
 ;; Author: Jorge Dias <jorge@mrdias.com>
+;; URL: https://github.com/diasjorge/emacs-load-env-vars
 ;; Keywords: lisp
 ;; Version: 0.0.1
+;; Package-Requires: ((emacs "24"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -38,29 +40,31 @@
 
 (defvar load-env-vars-env-var-regexp
   "^\\(?:export[[:blank:]]\\)?\\([[:alpha:]_]+[[:alnum:]_]*\\)[=]['\"]?\\([^[:space:]'\"]*\\)['\"]?"
-  "Regexp to match env vars in file")
+  "Regexp to match env vars in file.")
 
 (defun load-env-vars-extract-env-vars (string)
+  "Extract environment variable name and value from STRING."
   (save-match-data
-    (let (matches value)
+    (let (matches)
       (dolist (element (split-string string "\n" t))
         (if (string-match load-env-vars-env-var-regexp element)
             (push (list (match-string 1 element) (match-string 2 element)) matches)))
       matches)))
 
 (defun load-env-vars-get-string-from-file (filePath)
-  "Return filePath's file content."
+  "Return FILEPATH's file content."
   (with-temp-buffer
     (insert-file-contents filePath)
     (buffer-string)))
 
 (defun load-env-vars-set-env-vars (env-vars)
+  "Set envariable variables from key value lists from ENV-VARS."
   (dolist (element env-vars)
     (let ((key (car element)) (value (cadr element)))
       (setenv key value))))
 
 (defun load-env-vars-from-file (filePath)
-  "load environment variables found in file"
+  "Load environment variables found in FILEPATH."
   (interactive "fEnvironment variables file:")
   (let ((env-vars (load-env-vars-extract-env-vars (load-env-vars-get-string-from-file filePath))))
     (load-env-vars-set-env-vars env-vars)))
