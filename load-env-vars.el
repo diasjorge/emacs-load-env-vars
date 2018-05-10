@@ -51,10 +51,10 @@
             (push (list (match-string 1 element) (match-string 2 element)) matches)))
       matches)))
 
-(defun load-env-vars-get-string-from-file (filePath)
-  "Return FILEPATH's file content."
+(defun load-env-vars-get-string-from-file (file-path)
+  "Return FILE-PATH's file content."
   (with-temp-buffer
-    (insert-file-contents filePath)
+    (insert-file-contents file-path)
     (buffer-string)))
 
 (defun load-env-vars-set-env-vars (env-vars)
@@ -63,10 +63,10 @@
     (let ((key (car element)) (value (cadr element)))
       (setenv key value))))
 
-(defun load-env-vars-from-file (filePath)
-  "Load environment variables found in FILEPATH."
-  (interactive "fEnvironment variables file:")
-  (let ((env-vars (load-env-vars-extract-env-vars (load-env-vars-get-string-from-file filePath))))
+(defun load-env-vars (file-path)
+  "Load environment variables found in FILE-PATH."
+  (interactive "fEnvironment variables file: ")
+  (let ((env-vars (load-env-vars-extract-env-vars (load-env-vars-get-string-from-file file-path))))
     (load-env-vars-set-env-vars env-vars)))
 
 (provide 'load-env-vars)
