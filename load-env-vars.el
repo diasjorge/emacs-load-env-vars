@@ -63,6 +63,7 @@
     (let ((key (car element)) (value (cadr element)))
       (setenv key value))))
 
+;;;###autoload
 (defun load-env-vars (file-path)
   "Load environment variables found in FILE-PATH."
   (interactive "fEnvironment variables file: ")
