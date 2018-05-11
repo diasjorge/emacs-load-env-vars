@@ -33,21 +33,38 @@
 ;; KEY="VALUE"
 ;; # Comment lines are ignored
 ;; KEY=VALUE # Inline comments are ignored
+;; KEY: VALUE
 
 ;;; Code:
 
 (defvar load-env-vars-env-var-regexp
-  "\\(?:export[[:blank:]]\\)?\\([[:alpha:]_]+[[:alnum:]_]*\\)[=]['\"]?\\([^[:space:]'\"]*\\)['\"]?"
-  "Regexp to match env vars in file.")
+  (rx
+   line-start
+   (0+ space)
+   (optional "export" (0+ space)) ;; optional export
+   (group (1+ (in "_" alnum))) ;; key
+   (or
+    (and (0+ space) "=" (0+ space))
+    (and ":" (1+ space))) ;; separator
+   (or
+    (and "'" (group (0+ (or "\\'" (not (any "'"))))) "'") ;; single quoted value
+    (and ?\" (group (0+ (or "\\\"" (not (any "\""))))) ?\") ;; double quoted value
+    (group (1+ (not (in "#" "\n" space)))) ;; unquoted value
+    )
+   (0+ space)
+   (optional "#" (0+ any))
+   )
+  "Regexp to match env vars in file."
+  )
 
 (defun load-env-vars-re-seq (regexp)
   "Get a list of all REGEXP matches in a buffer."
   (save-excursion
-    (beginning-of-buffer)
+    (goto-char (point-min))
     (save-match-data
       (let (matches)
-        (while (re-search-forward load-env-vars-env-var-regexp nil t)
-          (push (list (match-string 1) (match-string 2)) matches))
+        (while (re-search-forward regexp nil t)
+          (push (list (match-string-no-properties 1) (or (match-string-no-properties 2) (match-string-no-properties 3) (match-string-no-properties 4))) matches))
         matches))))
 
 (defun load-env-vars-extract-env-vars ()
