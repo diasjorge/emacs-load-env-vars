@@ -36,28 +36,25 @@
 
 ;;; Code:
 
-;; code goes here
-
 (defvar load-env-vars-env-var-regexp
-  "^\\(?:export[[:blank:]]\\)?\\([[:alpha:]_]+[[:alnum:]_]*\\)[=]['\"]?\\([^[:space:]'\"]*\\)['\"]?"
+  "\\(?:export[[:blank:]]\\)?\\([[:alpha:]_]+[[:alnum:]_]*\\)[=]['\"]?\\([^[:space:]'\"]*\\)['\"]?"
   "Regexp to match env vars in file.")
 
-(defun load-env-vars-extract-env-vars (string)
+(defun load-env-vars-re-seq (regexp)
+  "Get a list of all REGEXP matches in a buffer."
+  (save-excursion
+    (beginning-of-buffer)
+    (save-match-data
+      (let (matches)
+        (while (re-search-forward load-env-vars-env-var-regexp nil t)
+          (push (list (match-string 1) (match-string 2)) matches))
+        matches))))
+
+(defun load-env-vars-extract-env-vars ()
   "Extract environment variable name and value from STRING."
-  (save-match-data
-    (let (matches)
-      (dolist (element (split-string string "\n" t))
-        (if (string-match load-env-vars-env-var-regexp element)
-            (push (list (match-string 1 element) (match-string 2 element)) matches)))
-      matches)))
+  (load-env-vars-re-seq load-env-vars-env-var-regexp))
 
-(defun load-env-vars-get-string-from-file (file-path)
-  "Return FILE-PATH's file content."
-  (with-temp-buffer
-    (insert-file-contents file-path)
-    (buffer-string)))
-
-(defun load-env-vars-set-env-vars (env-vars)
+(defun load-env-vars-set-env (env-vars)
   "Set envariable variables from key value lists from ENV-VARS."
   (dolist (element env-vars)
     (let ((key (car element)) (value (cadr element)))
@@ -67,8 +64,10 @@
 (defun load-env-vars (file-path)
   "Load environment variables found in FILE-PATH."
   (interactive "fEnvironment variables file: ")
-  (let ((env-vars (load-env-vars-extract-env-vars (load-env-vars-get-string-from-file file-path))))
-    (load-env-vars-set-env-vars env-vars)))
+  (with-temp-buffer
+    (insert-file-contents file-path)
+    (let ((env-vars (load-env-vars-extract-env-vars)))
+      (load-env-vars-set-env env-vars))))
 
 (provide 'load-env-vars)
 ;;; load-env-vars.el ends here
