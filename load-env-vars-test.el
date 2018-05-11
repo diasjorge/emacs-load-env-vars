@@ -1,3 +1,6 @@
+(when (require 'undercover nil t)
+  (undercover "load-env-vars.el"))
+
 (require 'ert)
 (require 'load-env-vars)
 
