@@ -1,2 +1,14 @@
 # emacs-load-env-vars
+
+[![Build Status](https://travis-ci.org/diasjorge/emacs-load-env-vars.svg?branch=master)](https://travis-ci.org/diasjorge/emacs-load-env-vars)
+[![Coverage Status](https://coveralls.io/repos/github/diasjorge/emacs-load-env-vars/badge.svg?branch=improvements)](https://coveralls.io/github/diasjorge/emacs-load-env-vars?branch=improvements)
+
 A package to load environment variable files into emacs
+
+## Usage
+
+Just execute `M-x load-env-vars` and point to your env file.
+
+## Supported Syntax
+
+Check [env.example](env.example) for supported syntax

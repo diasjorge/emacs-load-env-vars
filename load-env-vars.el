@@ -5,7 +5,7 @@
 ;; Author: Jorge Dias <jorge@mrdias.com>
 ;; URL: https://github.com/diasjorge/emacs-load-env-vars
 ;; Keywords: lisp
-;; Version: 0.0.1
+;; Version: 0.0.2
 ;; Package-Requires: ((emacs "24"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -33,41 +33,58 @@
 ;; KEY="VALUE"
 ;; # Comment lines are ignored
 ;; KEY=VALUE # Inline comments are ignored
+;; KEY: VALUE
 
 ;;; Code:
 
-;; code goes here
-
 (defvar load-env-vars-env-var-regexp
-  "^\\(?:export[[:blank:]]\\)?\\([[:alpha:]_]+[[:alnum:]_]*\\)[=]['\"]?\\([^[:space:]'\"]*\\)['\"]?"
-  "Regexp to match env vars in file.")
+  (rx
+   line-start
+   (0+ space)
+   (optional "export" (0+ space)) ;; optional export
+   (group (1+ (in "_" alnum))) ;; key
+   (or
+    (and (0+ space) "=" (0+ space))
+    (and ":" (1+ space))) ;; separator
+   (or
+    (and "'" (group (0+ (or "\\'" (not (any "'"))))) "'") ;; single quoted value
+    (and ?\" (group (0+ (or "\\\"" (not (any "\""))))) ?\") ;; double quoted value
+    (group (1+ (not (in "#" "\n" space)))) ;; unquoted value
+    )
+   (0+ space)
+   (optional "#" (0+ any))
+   )
+  "Regexp to match env vars in file."
+  )
 
-(defun load-env-vars-extract-env-vars (string)
+(defun load-env-vars-re-seq (regexp)
+  "Get a list of all REGEXP matches in a buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (save-match-data
+      (let (matches)
+        (while (re-search-forward regexp nil t)
+          (push (list (match-string-no-properties 1) (or (match-string-no-properties 2) (match-string-no-properties 3) (match-string-no-properties 4))) matches))
+        matches))))
+
+(defun load-env-vars-extract-env-vars ()
   "Extract environment variable name and value from STRING."
-  (save-match-data
-    (let (matches)
-      (dolist (element (split-string string "\n" t))
-        (if (string-match load-env-vars-env-var-regexp element)
-            (push (list (match-string 1 element) (match-string 2 element)) matches)))
-      matches)))
+  (load-env-vars-re-seq load-env-vars-env-var-regexp))
 
-(defun load-env-vars-get-string-from-file (filePath)
-  "Return FILEPATH's file content."
-  (with-temp-buffer
-    (insert-file-contents filePath)
-    (buffer-string)))
-
-(defun load-env-vars-set-env-vars (env-vars)
+(defun load-env-vars-set-env (env-vars)
   "Set envariable variables from key value lists from ENV-VARS."
   (dolist (element env-vars)
     (let ((key (car element)) (value (cadr element)))
       (setenv key value))))
 
-(defun load-env-vars-from-file (filePath)
-  "Load environment variables found in FILEPATH."
-  (interactive "fEnvironment variables file:")
-  (let ((env-vars (load-env-vars-extract-env-vars (load-env-vars-get-string-from-file filePath))))
-    (load-env-vars-set-env-vars env-vars)))
+;;;###autoload
+(defun load-env-vars (file-path)
+  "Load environment variables found in FILE-PATH."
+  (interactive "fEnvironment variables file: ")
+  (with-temp-buffer
+    (insert-file-contents file-path)
+    (let ((env-vars (load-env-vars-extract-env-vars)))
+      (load-env-vars-set-env env-vars))))
 
 (provide 'load-env-vars)
 ;;; load-env-vars.el ends here
