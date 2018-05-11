@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e
+
+emacs -batch -L . -l ert -l load-env-vars-test.el -f ert-run-tests-batch-and-exit
