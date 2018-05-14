@@ -6,6 +6,14 @@
 
 A package to load environment variable files into emacs
 
+## Installation
+
+If you use use-package.
+
+```elisp
+(use-package load-env-vars)
+```
+
 ## Usage
 
 Just execute `M-x load-env-vars` and point to your env file.
