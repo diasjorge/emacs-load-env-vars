@@ -57,6 +57,27 @@
   "Regexp to match env vars in file."
   )
 
+(defvar load-env-vars-env-var-internal-regexp
+  (rx
+   "$"
+   (optional "{")
+   (group (1+ (in "_" alnum)))
+   (optional "}"))
+  "Regexp to match internal/embedded env vars in a string")
+
+(defun load-env-vars-sub-internal-variables (str)
+  "Substitutes embedded variables references in STR, for instance,
+if we had previous defined an environment variable (with `setenv')
+of 'FOO' to be 'hello', then a value for STR of either '$FOO/world'
+or '${FOO}/world' would return a value of 'hello/world'.
+
+Note: Referencing undefined variables will be substituted with an
+empty string."
+  (replace-regexp-in-string load-env-vars-env-var-internal-regexp
+                            (lambda (p)
+                              (or (getenv (match-string 1 p)) ""))
+                            value t))
+
 (defun load-env-vars-re-seq (regexp)
   "Get a list of all REGEXP matches in a buffer."
   (save-excursion
@@ -74,8 +95,10 @@
 (defun load-env-vars-set-env (env-vars)
   "Set envariable variables from key value lists from ENV-VARS."
   (dolist (element env-vars)
-    (let ((key (car element)) (value (cadr element)))
-      (setenv key value))))
+    (let* ((key (car element))
+           (value (cadr element))
+           (expval (load-env-vars-sub-internal-variables value)))
+      (setenv key expval))))
 
 ;;;###autoload
 (defun load-env-vars (file-path)
